@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add Memory</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Add New Memory</h1>
+
+        <form method="POST">
+            <input type="text" name="title" placeholder="Page Title" required>
+
+            <input type="url" name="url" placeholder="Website URL" required>
+
+            <input type="text" name="topic" placeholder="Topic e.g. Python, AI, DBMS" required>
+
+            <textarea name="notes" placeholder="Write short notes"></textarea>
+
+            <select name="difficulty">
+                <option value="Easy">Easy</option>
+                <option value="Medium">Medium</option>
+                <option value="Hard">Hard</option>
+            </select>
+
+            <button type="submit">Save Memory</button>
+        </form>
+
+        <a href="/">Back Home</a>
+    </div>
+
+<nav class="navbar">
+    <h2>MnemoSphere</h2>
+    <div>
+        <a href="/">Home</a>
+        {% if session.get("user_id") %}
+            <a href="/logout">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+            <a href="/signup">Signup</a>
+        {% endif %}
+    </div>
+</nav>
+</body>
+</html>

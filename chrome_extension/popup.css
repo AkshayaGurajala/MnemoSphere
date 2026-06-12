@@ -1,0 +1,99 @@
+body {
+    width: 350px;
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #eef2f7;
+    color: #111827;
+}
+
+.popup-card {
+    padding: 18px;
+}
+
+h2 {
+    margin: 0;
+    color: #2563eb;
+    font-size: 24px;
+}
+
+.subtitle {
+    margin-top: 4px;
+    color: #64748b;
+    font-size: 13px;
+}
+
+.field-label {
+    display: block;
+    margin-top: 14px;
+    margin-bottom: 6px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #334155;
+}
+
+.page-title {
+    background: white;
+    padding: 11px;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    line-height: 1.4;
+}
+
+input, textarea, select {
+    width: 100%;
+    padding: 11px;
+    box-sizing: border-box;
+    border-radius: 10px;
+    border: 1px solid #cbd5e1;
+    font-size: 14px;
+    background: white;
+}
+
+textarea {
+    height: 86px;
+    resize: vertical;
+}
+
+button {
+    width: 100%;
+    margin-top: 16px;
+    padding: 12px;
+    border-radius: 10px;
+    border: none;
+    background: #2563eb;
+    color: white;
+    font-size: 15px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+button:hover {
+    background: #1d4ed8;
+}
+
+.suggest-box {
+    margin-top: 14px;
+    padding: 12px;
+    border-radius: 12px;
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.suggest-box.useful {
+    background: #dcfce7;
+    color: #166534;
+    border: 1px solid #86efac;
+}
+
+.suggest-box.neutral {
+    background: #fff7d6;
+    color: #854d0e;
+    border: 1px solid #fde68a;
+}
+
+#status {
+    font-size: 13px;
+    font-weight: bold;
+    margin-bottom: 0;
+}

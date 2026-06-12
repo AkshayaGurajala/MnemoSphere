@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MnemoSphere</title>
+    <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+
+<div class="popup-card">
+
+    <h2>MnemoSphere</h2>
+    <p class="subtitle">AI Browser Memory Assistant</p>
+
+    <label class="field-label">Memory Mode</label>
+    <select id="memoryMode">
+        <option value="manual">Manual Mode</option>
+        <option value="suggest">Suggest Mode</option>
+        <option value="auto">Auto Preview Mode</option>
+    </select>
+
+    <div id="suggestBox" class="suggest-box">
+        <p id="suggestText">Analyzing page...</p>
+    </div>
+
+    <label class="field-label">Page Title</label>
+    <p id="pageTitle" class="page-title">Loading...</p>
+
+    <label class="field-label">Topic</label>
+    <input type="text" id="topic" placeholder="Example: History, Music, Biology">
+
+    <label class="field-label">Your Notes</label>
+    <textarea id="notes" placeholder="Write what you want to remember from this page"></textarea>
+
+    <label class="field-label">Difficulty Level</label>
+    <select id="difficulty">
+        <option value="Easy">Easy</option>
+        <option value="Medium" selected>Medium</option>
+        <option value="Hard">Hard</option>
+    </select>
+
+    <button id="saveBtn">Save Memory</button>
+
+    <p id="status"></p>
+
+</div>
+
+<script src="popup.js"></script>
+</body>
+</html>

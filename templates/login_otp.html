@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>OTP Login - MnemoSphere</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="auth-wrapper">
+    <div class="auth-card">
+        <h1>Login with OTP</h1>
+        <p>Enter your registered email to receive a login OTP.</p>
+
+        <form method="POST">
+            <input type="email" name="email" placeholder="Enter your email" required>
+            <button type="submit">Send OTP</button>
+        </form>
+
+        {% if message %}
+            <p>{{ message }}</p>
+        {% endif %}
+
+        <p><a href="/login">Back to Password Login</a></p>
+    </div>
+</div>
+
+</body>
+</html>

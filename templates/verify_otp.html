@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Verify OTP - MnemoSphere</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="auth-wrapper">
+
+    <div class="auth-card">
+
+        <h1>Verify OTP</h1>
+
+        <p>
+            Enter the OTP sent to your email.
+        </p>
+
+        <form method="POST">
+
+            <input 
+                type="text"
+                name="otp"
+                placeholder="Enter 6-digit OTP"
+                required
+                maxlength="6"
+            >
+
+            <button type="submit">
+                Verify OTP
+            </button>
+
+        </form>
+
+        {% if message %}
+            <p>{{ message }}</p>
+        {% endif %}
+
+        <div class="otp-actions">
+
+            <a href="/login-otp" class="auth-link">
+                Resend OTP
+            </a>
+
+            <a href="/login" class="auth-link">
+                Back to Login
+            </a>
+
+        </div>
+
+    </div>
+
+</div>
+
+</body>
+</html>

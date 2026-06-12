@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Edit Memory</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Edit Memory</h1>
+
+        <form method="POST">
+
+            <label>Title</label>
+            <input type="text" name="title" value="{{ memory[1] }}" required>
+
+            <label>URL</label>
+            <input type="url" name="url" value="{{ memory[2] }}" required>
+
+            <label>Topic</label>
+            <input type="text" name="topic" value="{{ memory[3] }}" required>
+
+            <label>Notes</label>
+            <textarea name="notes" rows="5">{{ memory[4] }}</textarea>
+
+            <label>Difficulty</label>
+            <select name="difficulty">
+                <option value="Easy" {% if memory[5] == "Easy" %}selected{% endif %}>Easy</option>
+                <option value="Medium" {% if memory[5] == "Medium" %}selected{% endif %}>Medium</option>
+                <option value="Hard" {% if memory[5] == "Hard" %}selected{% endif %}>Hard</option>
+            </select>
+
+            <label>AI Summary</label>
+            <textarea name="summary" rows="7">{{ memory[6] }}</textarea>
+
+            <label>Keywords</label>
+            <textarea name="keywords" rows="3">{{ memory[7] }}</textarea>
+
+            <label>Category</label>
+            <input type="text" name="category" value="{{ memory[8] }}">
+
+            <button type="submit">Update Memory</button>
+
+        </form>
+
+        <br>
+        <a href="/memories" class="btn">Back to Memories</a>
+    </div>
+
+<nav class="navbar">
+    <h2>MnemoSphere</h2>
+    <div>
+        <a href="/">Home</a>
+        {% if session.get("user_id") %}
+            <a href="/logout">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+            <a href="/signup">Signup</a>
+        {% endif %}
+    </div>
+</nav>
+</body>
+</html>

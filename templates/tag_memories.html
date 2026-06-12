@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Tag Memories</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="container">
+
+    <h1>Tag: #{{ tag_name }}</h1>
+
+    {% if memories %}
+
+        {% for memory in memories %}
+
+        <div class="card">
+
+            <h2>{{ memory[1] }}</h2>
+
+            <span class="badge">{{ memory[3] }}</span>
+            <span class="badge">{{ memory[5] }}</span>
+            <span class="badge">{{ memory[8] }}</span>
+
+            <p><strong>Notes:</strong> {{ memory[4] }}</p>
+
+            <div class="summary-box">
+                <strong>AI Summary:</strong>
+                <p>{{ memory[6] }}</p>
+            </div>
+
+            <br>
+
+            <a href="/memory/{{ memory[0] }}" class="btn">
+                View Details
+            </a>
+
+        </div>
+
+        {% endfor %}
+
+    {% else %}
+
+        <p>No memories found for this tag.</p>
+
+    {% endif %}
+
+    <br>
+
+    <a href="/memories" class="btn">
+        Back to Memories
+    </a>
+
+</div>
+
+</body>
+</html>

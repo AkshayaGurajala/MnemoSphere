@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>MnemoSphere</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <h2>MnemoSphere</h2>
+
+    <div>
+        <a href="/">Home</a>
+
+        {% if session.get("user_id") %}
+            <a href="/logout">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+            <a href="/signup">Signup</a>
+        {% endif %}
+        <a href="/dashboard">Dashboard</a>
+        <a href="/knowledge-graph">Knowledge Graph</a>
+
+    </div>
+</nav>
+
+<section class="hero">
+
+    <h1>MnemoSphere</h1>
+
+    <h3>AI Digital Memory & Learning Intelligence System</h3>
+
+    <p>
+        Save useful webpages, generate AI summaries, organize knowledge,
+        ask questions from your memories, and discover related learning resources.
+    </p>
+
+    <form action="/ask" method="POST" class="hero-search">
+
+        <input 
+            type="text"
+            name="question"
+            placeholder="Ask MnemoSphere anything..."
+            required
+        >
+
+        <button type="submit">
+            Ask AI
+        </button>
+
+    </form>
+
+    <div class="hero-actions">
+
+        <a href="/memories" class="btn">
+            View Memories
+        </a>
+
+        <a href="/add" class="btn">
+            Add Memory
+        </a>
+
+    </div>
+
+</section>
+
+<section class="features">
+
+    <div class="feature-card">
+        <div class="feature-icon">🧠</div>
+        <h2>AI Summaries</h2>
+        <p>Turns saved webpages into clean, useful summaries.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">💬</div>
+        <h2>Smart Recall</h2>
+        <p>Ask questions and get answers from your memories.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">🔍</div>
+        <h2>Semantic Search</h2>
+        <p>Find memories by meaning, not only exact words.</p>
+    </div>
+
+    <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <h2>Related Memories</h2>
+        <p>Discovers connected resources automatically.</p>
+    </div>
+
+</section>
+
+</body>
+</html>

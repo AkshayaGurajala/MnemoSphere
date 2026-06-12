@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Memories</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <h2>MnemoSphere</h2>
+    <div>
+        <a href="/">Home</a>
+        {% if session.get("user_id") %}
+            <a href="/logout">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+            <a href="/signup">Signup</a>
+        {% endif %}
+        <a href="/dashboard">Dashboard</a>
+      <a href="/knowledge-graph">Knowledge Graph</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <h1>Your Digital Memories</h1>
+
+    <div class="stats-grid">
+
+        <a href="/memories" class="stat-card-link">
+            <div class="stat-card">
+                <h3>Total Memories</h3>
+                <p>{{ stats.total }}</p>
+            </div>
+        </a>
+
+        <a href="/memories?difficulty=Easy" class="stat-card-link">
+            <div class="stat-card">
+                <h3>Easy</h3>
+                <p>{{ stats.easy }}</p>
+            </div>
+        </a>
+
+        <a href="/memories?difficulty=Medium" class="stat-card-link">
+            <div class="stat-card">
+                <h3>Medium</h3>
+                <p>{{ stats.medium }}</p>
+            </div>
+        </a>
+
+        <a href="/memories?difficulty=Hard" class="stat-card-link">
+            <div class="stat-card">
+                <h3>Hard</h3>
+                <p>{{ stats.hard }}</p>
+            </div>
+        </a>
+
+    </div>
+
+    {% if difficulty_filter %}
+        <p class="filter-text">
+            Showing {{ difficulty_filter }} memories
+            <a href="/memories">Clear filter</a>
+        </p>
+    {% endif %}
+
+    <form method="GET">
+        <input type="text" name="search" placeholder="Search memories..." value="{{ search }}">
+
+        {% if difficulty_filter %}
+            <input type="hidden" name="difficulty" value="{{ difficulty_filter }}">
+        {% endif %}
+
+        <button type="submit">Search</button>
+        <a href="/export/csv" class="btn">Export CSV</a>
+        <a href="/export/pdf" class="btn">Export PDF</a>
+    </form>
+
+    {% for memory in memories %}
+        <div class="card">
+
+            <h2>{{ memory[2] }}</h2>
+
+            <span class="badge">{{ memory[4] }}</span>
+            <span class="badge">{{ memory[6] }}</span>
+            <span class="badge">{{ memory[9] }}</span>
+            <span class="badge">Score: {{ memory[10] }}/100</span>
+            <span class="badge">{{ memory[11] }}</span>
+
+            <p><strong>Notes:</strong> {{ memory[5] }}</p>
+
+            <p><strong>Keywords:</strong></p>
+
+            <div class="tag-container">
+                {% if memory[8] %}
+                    {% for keyword in memory[8].split(",") %}
+                        <a href="/tag/{{ keyword.strip() }}" class="tag-link">
+                            #{{ keyword.strip() }}
+                        </a>
+                    {% endfor %}
+                {% endif %}
+            </div>
+
+            <div class="summary-box">
+                <strong>AI Summary:</strong>
+                {{ memory[7] | safe }}
+            </div>
+
+            <p>
+                <strong>Recommended Next Topics:</strong>
+                {{ memory[12] }}
+            </p>
+
+            <br>
+
+            <a href="/memory/{{ memory[0] }}" class="btn">View Details</a>
+            <a href="{{ memory[3] }}" target="_blank" class="btn">Open Resource</a>
+            <a href="/edit/{{ memory[0] }}" class="btn">Edit Memory</a>
+            <a href="/delete/{{ memory[0] }}" class="btn delete-btn">Delete</a>
+            <a href="/regenerate/{{ memory[0] }}" class="btn">Regenerate AI Summary</a>
+
+            <p class="date">Saved on: {{ memory[13] }}</p>
+
+        </div>
+    {% endfor %}
+
+</div>
+
+</body>
+</html>

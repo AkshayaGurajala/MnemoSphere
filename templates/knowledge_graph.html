@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Knowledge Graph</title>
+
+    <link rel="stylesheet" href="/static/style.css">
+
+    <link 
+        rel="stylesheet" 
+        href="https://unpkg.com/vis-network@9.1.2/styles/vis-network.min.css"
+    >
+
+    <script src="https://unpkg.com/vis-network@9.1.2/dist/vis-network.min.js"></script>
+</head>
+
+<body>
+
+<nav class="navbar">
+    <h2>MnemoSphere</h2>
+    <div>
+        <a href="/">Home</a>
+        <a href="/memories">Memories</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/knowledge-graph">Knowledge Graph</a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+    <h1>Knowledge Graph</h1>
+    <p>Visual map of how your saved memories connect through topics, categories, and keywords.</p>
+
+    <div id="knowledgeGraph"></div>
+</div>
+
+<script id="nodes-data" type="application/json">
+    {{ nodes | tojson }}
+</script>
+
+<script id="edges-data" type="application/json">
+    {{ edges | tojson }}
+</script>
+
+<script>
+    const graphNodes = JSON.parse(
+        document.getElementById("nodes-data").textContent
+    );
+
+    const graphEdges = JSON.parse(
+        document.getElementById("edges-data").textContent
+    );
+    const nodesDataset = new vis.DataSet(graphNodes);
+    const edgesDataset = new vis.DataSet(graphEdges);
+
+    const container = document.getElementById("knowledgeGraph");
+
+    const data = {
+        nodes: nodesDataset,
+        edges: edgesDataset
+    };
+
+    const options = {
+        nodes: {
+            shape: "dot",
+            size: 18,
+            font: {
+                size: 14
+            }
+        },
+        edges: {
+            arrows: "to",
+            color: "#94a3b8"
+        },
+        physics: {
+            stabilization: true
+        },
+        groups: {
+            memory: {
+                color: "#2563eb"
+            },
+            topic: {
+                color: "#16a34a"
+            },
+            category: {
+                color: "#f97316"
+            },
+            keyword: {
+                color: "#9333ea"
+            }
+        }
+    };
+
+    new vis.Network(container, data, options);
+</script>
+
+</body>
+</html>

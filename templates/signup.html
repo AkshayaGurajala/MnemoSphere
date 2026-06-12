@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Signup - MnemoSphere</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div class="auth-wrapper">
+
+    <div class="auth-card">
+
+        <h1>Create Account</h1>
+
+        <p>
+            Build your personal AI memory system.
+        </p>
+
+        <form method="POST">
+
+            <input 
+                type="text"
+                name="username"
+                placeholder="Username"
+                required
+            >
+
+            <input 
+                type="email"
+                name="email"
+                placeholder="Email"
+                required
+            >
+
+            <div class="password-wrapper">
+
+                <input 
+                    type="password"
+                    id="signup-password"
+                    name="password"
+                    placeholder="Password"
+                    required
+                    minlength="8"
+                >
+
+                <span 
+                    class="toggle-password"
+                    onclick="toggleSignupPassword()"
+                >
+                    👁
+                </span>
+
+            </div>
+
+            <div class="password-wrapper">
+
+                <input 
+                    type="password"
+                    id="confirm-password"
+                    name="confirm_password"
+                    placeholder="Re-enter Password"
+                    required
+                    minlength="8"
+                >
+
+                <span 
+                    class="toggle-password"
+                    onclick="toggleConfirmPassword()"
+                >
+                    👁
+                </span>
+
+            </div>
+
+            <small>
+                Password must contain at least 8 characters.
+            </small>
+
+            {% if error %}
+                <p class="error-message">
+                    {{ error }}
+                </p>
+            {% endif %}
+
+            <button type="submit">
+                Create Account
+            </button>
+
+        </form>
+
+        <p>
+            Already have an account?
+            <a href="/login">
+                Login
+            </a>
+        </p>
+
+    </div>
+
+</div>
+
+<script>
+
+function toggleSignupPassword() {
+
+    const passwordInput =
+        document.getElementById("signup-password");
+
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+    } else {
+        passwordInput.type = "password";
+    }
+}
+
+function toggleConfirmPassword() {
+
+    const passwordInput =
+        document.getElementById("confirm-password");
+
+    if (passwordInput.type === "password") {
+        passwordInput.type = "text";
+    } else {
+        passwordInput.type = "password";
+    }
+}
+
+</script>
+
+</body>
+</html>

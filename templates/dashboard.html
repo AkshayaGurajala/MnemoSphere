@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Learning Dashboard</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<nav class="navbar">
+    <h2>MnemoSphere</h2>
+    <div>
+        <a href="/">Home</a>
+        <a href="/memories">Memories</a>
+        <a href="/dashboard">Dashboard</a>
+        <a href="/add">Add Memory</a>
+        <a href="/knowledge-graph">Knowledge Graph</a>
+        <a href="/logout">Logout</a>
+    </div>
+</nav>
+
+<div class="container">
+
+    <h1>Learning Analytics Dashboard</h1>
+
+    <a href="/regenerate-missing" class="btn">Regenerate Missing AI Data</a>
+
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Memories</h3>
+            <p>{{ total_memories }}</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Average Knowledge Score</h3>
+            <p>{{ avg_score }}/100</p>
+        </div>
+
+        <div class="stat-card">
+            <h3>Most Studied Topic</h3>
+            <p>{{ top_topic }}</p>
+        </div>
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Top Categories</h2>
+
+        {% for category in categories %}
+            <div class="analytics-row">
+                <span>{{ category[0] }}</span>
+                <strong>{{ category[1] }}</strong>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Memory Types</h2>
+
+        {% for item in memory_types %}
+            <div class="analytics-row">
+                <span>{{ item[0] }}</span>
+                <strong>{{ item[1] }}</strong>
+            </div>
+        {% endfor %}
+    </div>
+
+    <div class="dashboard-section">
+        <h2>Top Knowledge Memories</h2>
+
+        {% for memory in top_memories %}
+            <div class="analytics-row">
+                <span>{{ memory[0] }}</span>
+                <strong>{{ memory[1] }}/100 - {{ memory[2] }}</strong>
+            </div>
+        {% endfor %}
+    </div>
+    <div class="stat-card">
+    <h3>Learning Streak</h3>
+    <p>{{ learning_streak }} days</p>
+</div>
+
+<div class="stat-card">
+    <h3>This Week</h3>
+    <p>{{ memories_this_week }}</p>
+</div>
+
+<div class="stat-card">
+    <h3>Weekly Avg Score</h3>
+    <p>{{ weekly_avg_score }}/100</p>
+</div>
+
+<div class="stat-card">
+    <h3>High Value Memories</h3>
+    <p>{{ high_value_count }}</p>
+</div>
+
+</div>
+
+</body>
+</html>

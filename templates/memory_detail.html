@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Memory Details</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <div class="container">
+
+        <h1>{{ memory[1] }}</h1>
+
+        <span class="badge">{{ memory[3] }}</span>
+        <span class="badge">{{ memory[5] }}</span>
+        <span class="badge">{{ memory[8] }}</span>
+
+        <div class="card">
+            <h2>Notes</h2>
+            <p>{{ memory[4] }}</p>
+        </div>
+
+        <div class="card">
+            <h2>AI Summary</h2>
+            <p>{{ memory[6] | safe }}</p>
+        </div>
+
+        <div class="card">
+            <h2>Keywords</h2>
+            <p>{{ memory[7] }}</p>
+        </div>
+
+        <div class="card">
+            <h2>Resource</h2>
+            <p>{{ memory[2] }}</p>
+            <a href="{{ memory[2] }}" target="_blank" class="btn">Open Resource</a>
+        </div>
+
+        <p class="date">Saved on: {{ memory[9] }}</p>
+
+        <a href="/edit/{{ memory[0] }}" class="btn">Edit Memory</a>
+        <a href="/regenerate/{{ memory[0] }}" class="btn">Regenerate AI Summary</a>
+        <a href="/memories" class="btn">Back to Memories</a>
+     <hr>
+
+<h2>Related Memories</h2>
+
+{% if related_memories %}
+
+    {% for related in related_memories %}
+
+    <div class="card">
+
+        <h3>{{ related[1] }}</h3>
+
+        <span class="badge">{{ related[3] }}</span>
+        <span class="badge">{{ related[5] }}</span>
+
+        <p>{{ related[6][:200] }}...</p>
+
+        <a href="/memory/{{ related[0] }}" class="btn">
+            View Related Memory
+        </a>
+
+    </div>
+
+    {% endfor %}
+
+{% else %}
+
+<p>No related memories found.</p>
+
+{% endif %}
+    </div>
+    <nav class="navbar">
+    <h2>MnemoSphere</h2>
+    <div>
+        <a href="/">Home</a>
+        {% if session.get("user_id") %}
+            <a href="/logout">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+            <a href="/signup">Signup</a>
+        {% endif %}
+    </div>
+</nav>
+</body>
+</html>

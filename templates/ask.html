@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<bo>
+<head>
+    <title>Ask MnemoSphere</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<>
+    <div class="container">
+        <h1>Ask MnemoSphere</h1>
+        <p>Ask questions from your saved digital memories.</p>
+
+        <form method="POST">
+            <textarea 
+                name="question" 
+                placeholder="Example: What did I learn about cricket?"
+                required>{{ question }}</textarea>
+
+            <button type="submit">Ask</button>
+        </form>
+
+        {% if answer %}
+            <div class="summary-box">
+                <h2>AI Answer</h2>
+                <p>{{ answer }}</p>
+            </div>
+        {% endif %}
+
+        {% if related_memories %}
+            <h2>Related Memories Used</h2>
+
+            {% for memory in related_memories %}
+                <div class="card">
+                    <h3>{{ memory[1] }}</h3>
+                    <p><strong>Topic:</strong> {{ memory[3] }}</p>
+                    <p><strong>Summary:</strong> {{ memory[6] }}</p>
+                    <a href="{{ memory[2] }}" target="_blank" class="btn">Open Resource</a>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        <br>
+        <a href="/memories" class="btn">Back to Memories</a>
+    </div>
+<nav class="navbar">
+    <h2>MnemoSphere</h2>
+    <div>
+        <a href="/">Home</a>
+        {% if session.get("user_id") %}
+            <a href="/logout">Logout</a>
+        {% else %}
+            <a href="/login">Login</a>
+            <a href="/signup">Signup</a>
+        {% endif %}
+    </div>
+</nav>
+</body>
+</html>

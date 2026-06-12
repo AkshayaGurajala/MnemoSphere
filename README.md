@@ -116,33 +116,33 @@ Knowledge Graph & Memory Retrieval
 
 Main landing page of MnemoSphere featuring AI-powered search, authentication, and quick navigation to core learning features.
 
-![Home Page](screenshots/home_page.png)
+![Home Page](Screenshots/home_page.png)
 
 ### Memories Dashboard
 
 Central memory repository displaying saved resources, AI-generated summaries, knowledge scores, memory types, and recommended learning topics.
 
-![Memories Dashboard](screenshots/dashboard1.png)
-![Memories Dashboard](screenshots/dashboard2.png)
+![Memories Dashboard](Screenshots/dashboard1.png)
+![Memories Dashboard](Screenshots/dashboard2.png)
 
 ### Knowledge Graph
 
 Interactive visualization showing relationships between memories, topics, categories, and keywords for better knowledge discovery.
 
-![Knowledge Graph](screenshots/knowledge_graph.png)
+![Knowledge Graph](Screenshots/knowledge_graph.png)
 
 ### Chrome Extension
 
 Browser extension that enables Manual Mode, Suggest Mode, and Auto Mode for intelligent webpage capture and memory creation.
 
-![Chrome Extension](screenshots/extension_popup.png)
+![Chrome Extension](Screenshots/extension_popup.png)
 
 ### Memory Details
 
 Detailed memory view containing structured AI notes, keywords, educational insights, difficulty level, and learning recommendations.
 
-![Memory Details](screenshots/memory_page1.png)
-![Memory Details](screenshots/memory_page2.png)
+![Memory Details](Screenshots/memory_page1.png)
+![Memory Details](Screenshots/memory_page2.png)
 
 
 ## Author

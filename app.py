@@ -940,7 +940,12 @@ Click the link below to reset your MnemoSphere password:
 This link expires in 15 minutes.
 """
 
-            mail.send(msg)
+            try:
+                mail.send(msg)
+                print("OTP email sent successfully")
+            except Exception as e:
+                print("MAIL ERROR:", str(e))
+                return f"Mail Error: {str(e)}"
 
         message = "If this email exists, a reset link has been sent."
 
@@ -1026,7 +1031,12 @@ Your MnemoSphere OTP is:
 This OTP is valid for a short time.
 """
 
-            mail.send(msg)
+            try:
+                mail.send(msg)
+                print("OTP email sent successfully")
+            except Exception as e:
+                print("MAIL ERROR:", str(e))
+                return f"Mail Error: {str(e)}"
 
             return redirect("/verify-otp")
 

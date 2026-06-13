@@ -11,9 +11,6 @@ from flask import Response
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from io import BytesIO
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
-import numpy as np
 from werkzeug.security import generate_password_hash, check_password_hash
 from flask_mail import Mail, Message
 from itsdangerous import URLSafeTimedSerializer
@@ -23,7 +20,6 @@ load_dotenv()
 
 app = Flask(__name__)
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
 app.secret_key = "mnemosphere_secret_key"
 app.config["MAIL_SERVER"] = "smtp.gmail.com"
 app.config["MAIL_PORT"] = 587
@@ -216,12 +212,15 @@ def answer_from_memories(question, memories):
 
     for memory in memories:
         memory_context += f"""
-Title: {memory[1]}
-Topic: {memory[3]}
-Notes: {memory[4]}
-Summary: {memory[6]}
-Keywords: {memory[7]}
-Category: {memory[8]}
+Title: {memory[2]}
+Topic: {memory[4]}
+Notes: {memory[5]}
+Summary: {memory[7]}
+Keywords: {memory[8]}
+Category: {memory[9]}
+Knowledge Score: {memory[10]}
+Memory Type: {memory[11]}
+Recommended Next Topics: {memory[12]}
 ---
 """
 
@@ -257,102 +256,68 @@ def semantic_memory_search(question, all_memories, top_k=5):
     if not all_memories:
         return []
 
-    memory_texts = []
+    question_words = question.lower().split()
+
+    scored = []
 
     for memory in all_memories:
-        combined_text = f"""
-        Title: {memory[1]}
-        Topic: {memory[3]}
-        Notes: {memory[4]}
-        Summary: {memory[6]}
-        Keywords: {memory[7]}
-        Category: {memory[8]}
-        """
 
-        memory_texts.append(combined_text)
+        memory_text = f"""
+        {memory[1]}
+        {memory[3]}
+        {memory[4]}
+        {memory[6]}
+        {memory[7]}
+        {memory[8]}
+        """.lower()
 
-    # Convert memories into embeddings
-    memory_embeddings = embedding_model.encode(memory_texts)
+        score = 0
 
-    # Convert question into embedding
-    question_embedding = embedding_model.encode([question])
+        for word in question_words:
+            if word in memory_text:
+                score += 1
 
-    # Compute similarity
-    similarities = cosine_similarity(
-        question_embedding,
-        memory_embeddings
-    )[0]
+        if score > 0:
+            scored.append((score, memory))
 
-    # Get top matching memories
-    top_indices = np.argsort(similarities)[::-1][:top_k]
+    scored.sort(reverse=True, key=lambda x: x[0])
 
-    related_memories = []
-
-    for idx in top_indices:
-        similarity_score = similarities[idx]
-
-        # Ignore weak matches
-        if similarity_score > 0.25:
-            related_memories.append(all_memories[idx])
-
-    return related_memories
+    return [memory for score, memory in scored[:top_k]]
+    
 
 def get_related_memories(current_memory, all_memories, top_k=3):
 
     current_text = f"""
-    Title: {current_memory[1]}
-    Topic: {current_memory[3]}
-    Notes: {current_memory[4]}
-    Summary: {current_memory[6]}
-    Keywords: {current_memory[7]}
-    Category: {current_memory[8]}
-    """
+    {current_memory[3]}
+    {current_memory[7]}
+    {current_memory[8]}
+    """.lower()
 
-    current_embedding = embedding_model.encode([current_text])
-
-    other_memories = []
-    other_texts = []
-
-    for memory in all_memories:
-
-        # Skip same memory
-        if memory[0] == current_memory[0]:
-            continue
-
-        combined_text = f"""
-        Title: {memory[1]}
-        Topic: {memory[3]}
-        Notes: {memory[4]}
-        Summary: {memory[6]}
-        Keywords: {memory[7]}
-        Category: {memory[8]}
-        """
-
-        other_memories.append(memory)
-        other_texts.append(combined_text)
-
-    if not other_texts:
-        return []
-
-    other_embeddings = embedding_model.encode(other_texts)
-
-    similarities = cosine_similarity(
-        current_embedding,
-        other_embeddings
-    )[0]
-
-    top_indices = np.argsort(similarities)[::-1][:top_k]
+    current_words = set(current_text.replace(",", " ").split())
 
     related = []
 
-    for idx in top_indices:
+    for memory in all_memories:
 
-        similarity_score = similarities[idx]
+        if memory[0] == current_memory[0]:
+            continue
 
-        if similarity_score > 0.20:
-            related.append(other_memories[idx])
+        memory_text = f"""
+        {memory[3]}
+        {memory[7]}
+        {memory[8]}
+        """.lower()
 
-    return related
+        memory_words = set(memory_text.replace(",", " ").split())
+
+        score = len(current_words.intersection(memory_words))
+
+        if score > 0:
+            related.append((score, memory))
+
+    related.sort(reverse=True, key=lambda x: x[0])
+
+    return [memory for score, memory in related[:top_k]]
 @app.route("/")
 def home():
     return render_template("index.html")

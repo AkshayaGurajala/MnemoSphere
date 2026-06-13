@@ -29,12 +29,22 @@
             <h2>Related Memories Used</h2>
 
             {% for memory in related_memories %}
-                <div class="card">
-                    <h3>{{ memory[1] }}</h3>
-                    <p><strong>Topic:</strong> {{ memory[3] }}</p>
-                    <p><strong>Summary:</strong> {{ memory[6] }}</p>
-                    <a href="{{ memory[2] }}" target="_blank" class="btn">Open Resource</a>
-                </div>
+               <div class="card">
+    <h3>{{ memory[2] }}</h3>
+
+    <p><strong>Topic:</strong> {{ memory[4] }}</p>
+
+    <p><strong>Difficulty:</strong> {{ memory[6] }}</p>
+
+    <p><strong>Category:</strong> {{ memory[9] }}</p>
+
+    <div class="summary-box">
+        <strong>Summary:</strong>
+        {{ memory[7] | safe }}
+    </div>
+
+    <a href="{{ memory[3] }}" target="_blank" class="btn">Open Resource</a>
+</div>
             {% endfor %}
         {% endif %}
 

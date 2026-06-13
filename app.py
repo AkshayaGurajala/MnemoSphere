@@ -1365,6 +1365,8 @@ Content:
             "difficulty": "Medium",
             "reason": "AI analysis failed."
         })
+with app.app_context():
+    init_db()
 if __name__ == "__main__":
     init_db()
     app.run(debug=True)

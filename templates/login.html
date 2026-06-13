@@ -3,83 +3,74 @@
 <head>
     <title>Login - MnemoSphere</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
 </head>
-<body>
+<body class="auth-clean-page">
 
-<div class="auth-wrapper">
+<div class="auth-clean-card">
 
-    <div class="auth-card">
+    <h1>Log in</h1>
 
-        <h1>Welcome Back</h1>
+    <p class="auth-switch">
+        New user?
+        <a href="/signup">Register Now</a>
+    </p>
 
-        <p>
-            Login to access your AI memory system.
-        </p>
+    {% if error %}
+        <div class="auth-error">{{ error }}</div>
+    {% endif %}
 
-        <form method="POST">
+    <a href="/google-login" class="auth-google-btn">
+        <img
+    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+    class="google-logo"
+    alt="Google">
+        Continue with Google
+    </a>
 
-            <input 
-                type="email"
-                name="email"
-                placeholder="Enter Email"
-                required
-            >
-
-            <div class="password-wrapper">
-
-                <input 
-                    type="password"
-                    id="password"
-                    name="password"
-                    placeholder="Enter Password"
-                    required
-                >
-
-                <span 
-                    class="toggle-password"
-                    onclick="togglePassword()"
-                >
-                    👁
-                </span>
-
-            </div>
-
-            {% if error %}
-                <p class="error-message">
-                    {{ error }}
-                </p>
-            {% endif %}
-
-            <button type="submit">
-                Login with Password
-            </button>
-
-        </form>
-
-        <p>
-            New user?
-            <a href="/signup">
-                Register / Signup
-            </a>
-        </p>
-
+    <div class="auth-divider">
+        <span></span>
+        <p>or</p>
+        <span></span>
     </div>
+
+    <form method="POST" class="auth-form">
+        <label>Username or Email</label>
+        <input type="email" name="email" placeholder="Username or Email" required>
+
+        <label>Password</label>
+        <div class="auth-password-wrap">
+    <input
+        type="password"
+        id="loginPassword"
+        name="password"
+        placeholder="Enter password"
+        required>
+
+    <span
+        class="password-eye"
+        onclick="togglePassword('loginPassword', this)">
+        👁️
+    </span>
+</div>
+
+        <button type="submit" class="auth-primary-btn">Sign In</button>
+    </form>
 
 </div>
 
 <script>
+function togglePassword(id) {
+    const input = document.getElementById(id);
 
-function togglePassword() {
-
-    const passwordInput = document.getElementById("password");
-
-    if (passwordInput.type === "password") {
-        passwordInput.type = "text";
+    if (input.type === "password") {
+        input.type = "text";
     } else {
-        passwordInput.type = "password";
+        input.type = "password";
     }
 }
-
 </script>
 
 </body>

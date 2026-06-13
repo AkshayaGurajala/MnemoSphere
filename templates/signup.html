@@ -3,128 +3,91 @@
 <head>
     <title>Signup - MnemoSphere</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet"
+href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
-<body>
+<body class="auth-clean-page">
 
-<div class="auth-wrapper">
+<div class="auth-clean-card">
 
-    <div class="auth-card">
+    <h1>Create Account</h1>
 
-        <h1>Create Account</h1>
+    <p class="auth-switch">
+        Already have an account?
+        <a href="/login">Log in</a>
+    </p>
 
-        <p>
-            Build your personal AI memory system.
-        </p>
+    {% if error %}
+        <div class="auth-error">{{ error }}</div>
+    {% endif %}
 
-        <form method="POST">
+    <form method="POST" class="auth-form">
+        <label>Username</label>
+        <input type="text" name="username" placeholder="Enter username" required>
 
-            <input 
-                type="text"
-                name="username"
-                placeholder="Username"
-                required
-            >
+        <label>Email</label>
+        <input type="email" name="email" placeholder="Enter email" required>
 
-            <input 
-                type="email"
-                name="email"
-                placeholder="Email"
-                required
-            >
+        <label>Password</label>
+        <div class="auth-password-wrap">
+    <input
+        type="password"
+        id="loginPassword"
+        name="password"
+        placeholder="Enter password"
+        required>
 
-            <div class="password-wrapper">
+    <span
+        class="password-eye"
+        onclick="togglePassword('loginPassword', this)">
+        👁️
+    </span>
+</div>
+        <label>Confirm Password</label>
+        <div class="auth-password-wrap">
+    <input
+        type="password"
+        id="loginPassword"
+        name="password"
+        placeholder="Enter password"
+        required>
 
-                <input 
-                    type="password"
-                    id="signup-password"
-                    name="password"
-                    placeholder="Password"
-                    required
-                    minlength="8"
-                >
+    <span
+        class="password-eye"
+        onclick="togglePassword('loginPassword', this)">
+        👁️
+    </span>
+</div>
 
-                <span 
-                    class="toggle-password"
-                    onclick="toggleSignupPassword()"
-                >
-                    👁
-                </span>
+        <button type="submit" class="auth-primary-btn">Sign Up</button>
+    </form>
 
-            </div>
-
-            <div class="password-wrapper">
-
-                <input 
-                    type="password"
-                    id="confirm-password"
-                    name="confirm_password"
-                    placeholder="Re-enter Password"
-                    required
-                    minlength="8"
-                >
-
-                <span 
-                    class="toggle-password"
-                    onclick="toggleConfirmPassword()"
-                >
-                    👁
-                </span>
-
-            </div>
-
-            <small>
-                Password must contain at least 8 characters.
-            </small>
-
-            {% if error %}
-                <p class="error-message">
-                    {{ error }}
-                </p>
-            {% endif %}
-
-            <button type="submit">
-                Create Account
-            </button>
-
-        </form>
-
-        <p>
-            Already have an account?
-            <a href="/login">
-                Login
-            </a>
-        </p>
-
+    <div class="auth-divider">
+        <span></span>
+        <p>or</p>
+        <span></span>
     </div>
+
+    <a href="/google-login" class="auth-google-btn">
+        <img
+    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+    class="google-logo"
+    alt="Google">
+        Continue with Google
+    </a>
 
 </div>
 
 <script>
+function togglePassword(id) {
+    const input = document.getElementById(id);
 
-function toggleSignupPassword() {
-
-    const passwordInput =
-        document.getElementById("signup-password");
-
-    if (passwordInput.type === "password") {
-        passwordInput.type = "text";
+    if (input.type === "password") {
+        input.type = "text";
     } else {
-        passwordInput.type = "password";
+        input.type = "password";
     }
 }
-
-function toggleConfirmPassword() {
-
-    const passwordInput =
-        document.getElementById("confirm-password");
-
-    if (passwordInput.type === "password") {
-        passwordInput.type = "text";
-    } else {
-        passwordInput.type = "password";
-    }
-}
-
 </script>
 
 </body>

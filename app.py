@@ -12,6 +12,7 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from io import BytesIO
 from werkzeug.security import generate_password_hash, check_password_hash
+from authlib.integrations.flask_client import OAuth
 
 
 load_dotenv()
@@ -19,6 +20,15 @@ load_dotenv()
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "mnemosphere_secret_key")
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+oauth = OAuth(app)
+
+google = oauth.register(
+    name="google",
+    client_id=os.getenv("GOOGLE_CLIENT_ID"),
+    client_secret=os.getenv("GOOGLE_CLIENT_SECRET"),
+    server_metadata_url="https://accounts.google.com/.well-known/openid-configuration",
+    client_kwargs={"scope": "openid email profile"}
+)
 
 
 def init_db():
@@ -892,6 +902,42 @@ def login():
         "login.html",
         error=error
     )
+@app.route("/google-login")
+def google_login():
+    redirect_uri = "https://mnemosphere.onrender.com/google/callback"
+    return google.authorize_redirect(redirect_uri)
+
+
+@app.route("/google/callback")
+def google_callback():
+    token = google.authorize_access_token()
+    user_info = token.get("userinfo")
+
+    email = user_info["email"]
+    username = user_info.get("name", email.split("@")[0])
+
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+    user = cursor.fetchone()
+
+    if not user:
+        cursor.execute("""
+            INSERT INTO users (username, email, password)
+            VALUES (?, ?, ?)
+        """, (username, email, "GOOGLE_LOGIN"))
+
+        conn.commit()
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+
+    conn.close()
+
+    session["user_id"] = user[0]
+    session["username"] = user[1]
+
+    return redirect("/")
 @app.route("/logout")
 def logout():
 

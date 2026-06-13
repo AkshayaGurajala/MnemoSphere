@@ -12,23 +12,12 @@ from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from io import BytesIO
 from werkzeug.security import generate_password_hash, check_password_hash
-from flask_mail import Mail, Message
-from itsdangerous import URLSafeTimedSerializer
-import random
+
 
 load_dotenv()
-
 app = Flask(__name__)
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-app.secret_key = "mnemosphere_secret_key"
-app.config["MAIL_SERVER"] = "smtp.gmail.com"
-app.config["MAIL_PORT"] = 587
-app.config["MAIL_USE_TLS"] = True
-app.config["MAIL_USERNAME"] = os.getenv("MAIL_USERNAME")
-app.config["MAIL_PASSWORD"] = os.getenv("MAIL_PASSWORD")
 
-mail = Mail(app)
-serializer = URLSafeTimedSerializer(app.secret_key)
 
 def init_db():
     conn = sqlite3.connect("database.db")
@@ -907,147 +896,6 @@ def logout():
     session.clear()
 
     return redirect("/login")
-@app.route("/forgot-password", methods=["GET", "POST"])
-def forgot_password():
-    message = ""
-
-    if request.method == "POST":
-        email = request.form.get("email")
-
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
-        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
-        user = cursor.fetchone()
-        conn.close()
-
-        if user:
-            token = serializer.dumps(email, salt="password-reset")
-            reset_link = f"https://mnemosphere.onrender.com/reset-password/{token}"
-
-            print("PASSWORD RESET LINK:", reset_link)
-
-        message = "If this email exists, the reset link has been generated. Check Render logs for demo."
-
-    return render_template("forgot_password.html", message=message)
-@app.route("/reset-password/<token>", methods=["GET", "POST"])
-def reset_password(token):
-    try:
-        email = serializer.loads(
-            token,
-            salt="password-reset",
-            max_age=900
-        )
-    except:
-        return "Reset link expired or invalid."
-
-    if request.method == "POST":
-        password = request.form.get("password")
-        confirm_password = request.form.get("confirm_password")
-
-        if len(password) < 8:
-            return "Password must be at least 8 characters."
-
-        if password != confirm_password:
-            return "Passwords do not match."
-
-        hashed_password = generate_password_hash(password)
-
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
-
-        cursor.execute(
-            "UPDATE users SET password = ? WHERE email = ?",
-            (hashed_password, email)
-        )
-
-        conn.commit()
-        conn.close()
-
-        return redirect("/login")
-
-    return render_template("reset_password.html")
-@app.route("/login-otp", methods=["GET", "POST"])
-def login_otp():
-
-    message = ""
-
-    if request.method == "POST":
-
-        email = request.form.get("email")
-
-        conn = sqlite3.connect("database.db")
-        cursor = conn.cursor()
-
-        cursor.execute(
-            "SELECT * FROM users WHERE email = ?",
-            (email,)
-        )
-
-        user = cursor.fetchone()
-
-        conn.close()
-
-        if user:
-
-            otp = str(random.randint(100000, 999999))
-
-            session["otp_email"] = email
-            session["otp_code"] = otp
-
-            print("MNEMOSPHERE OTP:", otp)
-
-            return redirect("/verify-otp")
-
-        message = "Email not registered."
-
-    return render_template(
-        "login_otp.html",
-        message=message
-    )
-@app.route("/verify-otp", methods=["GET", "POST"])
-def verify_otp():
-
-    message = ""
-
-    if request.method == "POST":
-
-        entered_otp = request.form.get("otp")
-
-        saved_otp = session.get("otp_code")
-
-        email = session.get("otp_email")
-
-        if entered_otp == saved_otp:
-
-            conn = sqlite3.connect("database.db")
-            cursor = conn.cursor()
-
-            cursor.execute(
-                "SELECT * FROM users WHERE email = ?",
-                (email,)
-            )
-
-            user = cursor.fetchone()
-
-            conn.close()
-
-            if user:
-
-                session["user_id"] = user[0]
-                session["username"] = user[1]
-
-                session.pop("otp_code", None)
-                session.pop("otp_email", None)
-
-                return redirect("/")
-
-        else:
-            message = "Invalid OTP."
-
-    return render_template(
-        "verify_otp.html",
-        message=message
-    )
 @app.route("/dashboard")
 def dashboard():
     conn = sqlite3.connect("database.db")

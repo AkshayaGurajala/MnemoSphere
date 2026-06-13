@@ -10,27 +10,9 @@
 
     <div class="auth-card">
 
-        <h1>Verify OTP</h1>
+       
 
-        <p>
-            Enter the OTP sent to your email.
-        </p>
-
-        <form method="POST">
-
-            <input 
-                type="text"
-                name="otp"
-                placeholder="Enter 6-digit OTP"
-                required
-                maxlength="6"
-            >
-
-            <button type="submit">
-                Verify OTP
-            </button>
-
-        </form>
+                </form>
 
         {% if message %}
             <p>{{ message }}</p>
@@ -38,11 +20,7 @@
 
         <div class="otp-actions">
 
-            <a href="/login-otp" class="auth-link">
-                Resend OTP
-            </a>
-
-            <a href="/login" class="auth-link">
+                     <a href="/login" class="auth-link">
                 Back to Login
             </a>
 

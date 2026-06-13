@@ -15,7 +15,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 
 load_dotenv()
+
 app = Flask(__name__)
+app.secret_key = os.getenv("SECRET_KEY", "mnemosphere_secret_key")
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 

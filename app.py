@@ -922,32 +922,11 @@ def forgot_password():
 
         if user:
             token = serializer.dumps(email, salt="password-reset")
-            reset_link = f"http://127.0.0.1:5000/reset-password/{token}"
+            reset_link = f"https://mnemosphere.onrender.com/reset-password/{token}"
 
-            msg = Message(
-                "MnemoSphere Password Reset",
-                sender=app.config["MAIL_USERNAME"],
-                recipients=[email]
-            )
+            print("PASSWORD RESET LINK:", reset_link)
 
-            msg.body = f"""
-Hello,
-
-Click the link below to reset your MnemoSphere password:
-
-{reset_link}
-
-This link expires in 15 minutes.
-"""
-
-            try:
-                mail.send(msg)
-                print("OTP email sent successfully")
-            except Exception as e:
-                print("MAIL ERROR:", str(e))
-                return f"Mail Error: {str(e)}"
-
-        message = "If this email exists, a reset link has been sent."
+        message = "If this email exists, the reset link has been generated. Check Render logs for demo."
 
     return render_template("forgot_password.html", message=message)
 @app.route("/reset-password/<token>", methods=["GET", "POST"])
@@ -1015,28 +994,7 @@ def login_otp():
             session["otp_email"] = email
             session["otp_code"] = otp
 
-            msg = Message(
-                "MnemoSphere Login OTP",
-                sender=app.config["MAIL_USERNAME"],
-                recipients=[email]
-            )
-
-            msg.body = f"""
-Hello,
-
-Your MnemoSphere OTP is:
-
-{otp}
-
-This OTP is valid for a short time.
-"""
-
-            try:
-                mail.send(msg)
-                print("OTP email sent successfully")
-            except Exception as e:
-                print("MAIL ERROR:", str(e))
-                return f"Mail Error: {str(e)}"
+            print("MNEMOSPHERE OTP:", otp)
 
             return redirect("/verify-otp")
 

@@ -74,7 +74,7 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
             difficulty: "Medium"
         };
 
-        fetch("http://127.0.0.1:5000/api/add-memory", {
+        fetch("https://mnemosphere.onrender.com/api/add-memory", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json"

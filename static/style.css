@@ -723,3 +723,76 @@ input, textarea, select {
 .password-eye:hover {
     color: #2563eb;
 }
+.mobile-save-container {
+    max-width: 650px;
+    margin: 40px auto;
+}
+
+.mobile-save-form {
+    background: white;
+    padding: 28px;
+    border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(37, 99, 235, 0.12);
+}
+
+.mobile-save-form label {
+    display: block;
+    margin-top: 18px;
+    margin-bottom: 8px;
+    font-weight: 700;
+    color: #111827;
+}
+
+.mobile-save-form input,
+.mobile-save-form textarea,
+.mobile-save-form select {
+    width: 100%;
+    padding: 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 10px;
+    font-size: 15px;
+    box-sizing: border-box;
+}
+
+.mobile-save-form textarea {
+    min-height: 100px;
+}
+
+.mobile-save-form button {
+    width: 100%;
+    margin-top: 24px;
+    padding: 15px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: 800;
+    cursor: pointer;
+}
+
+.mobile-save-form button:hover {
+    background: #1d4ed8;
+}
+
+@media (max-width: 700px) {
+    .mobile-save-container {
+        margin: 20px 12px;
+    }
+
+    .mobile-save-form {
+        padding: 22px;
+    }
+
+    .navbar {
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    .navbar div {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 10px;
+    }
+}

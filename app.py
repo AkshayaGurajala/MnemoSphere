@@ -1119,6 +1119,78 @@ def extension_google_login():
         "token": extension_token,
         "email": email
     })
+@app.route("/add-url", methods=["GET", "POST"])
+def add_url_mobile():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    message = ""
+
+    if request.method == "POST":
+        url = request.form.get("url", "").strip()
+        topic = request.form.get("topic", "General Knowledge").strip()
+        notes = request.form.get("notes", "").strip()
+        difficulty = request.form.get("difficulty", "Medium")
+
+        if not url:
+            message = "Please enter a URL."
+            return render_template("add_url.html", message=message)
+
+        title = url
+
+        conn = sqlite3.connect("database.db")
+        cursor = conn.cursor()
+
+        cursor.execute(
+            "SELECT * FROM memories WHERE url = ? AND user_id = ?",
+            (url, session["user_id"])
+        )
+        existing_memory = cursor.fetchone()
+
+        if existing_memory:
+            conn.close()
+            message = "This memory already exists in your MnemoSphere."
+            return render_template("add_url.html", message=message)
+
+        page_text = extract_webpage_text(url)
+
+        ai_result = generate_ai_analysis(
+            page_text,
+            title,
+            topic,
+            notes,
+            difficulty
+        )
+
+        cursor.execute("""
+            INSERT INTO memories
+            (
+                user_id, title, url, topic, notes, difficulty,
+                summary, keywords, category, knowledge_score,
+                memory_type, next_topics
+            )
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        """, (
+            session["user_id"],
+            title,
+            url,
+            topic,
+            notes,
+            difficulty,
+            ai_result.get("summary", ""),
+            ai_result.get("keywords", ""),
+            ai_result.get("category", ""),
+            ai_result.get("knowledge_score", 50),
+            ai_result.get("memory_type", "General Knowledge"),
+            ai_result.get("next_topics", "Not available")
+        ))
+
+        conn.commit()
+        conn.close()
+
+        return redirect("/memories")
+
+    return render_template("add_url.html", message=message)
 
 @app.route("/logout")
 def logout():

@@ -3,9 +3,11 @@
 <head>
     <title>Signup - MnemoSphere</title>
     <link rel="stylesheet" href="/static/style.css">
+
     <link rel="stylesheet"
-href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
 </head>
+
 <body class="auth-clean-page">
 
 <div class="auth-clean-card">
@@ -22,6 +24,7 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     {% endif %}
 
     <form method="POST" class="auth-form">
+
         <label>Username</label>
         <input type="text" name="username" placeholder="Enter username" required>
 
@@ -30,34 +33,21 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
         <label>Password</label>
         <div class="auth-password-wrap">
-    <input
-        type="password"
-        id="loginPassword"
-        name="password"
-        placeholder="Enter password"
-        required>
+            <input type="password" name="password" id="signupPassword" placeholder="Enter password" required>
 
-    <span
-        class="password-eye"
-        onclick="togglePassword('loginPassword', this)">
-        👁️
-    </span>
-</div>
+            <span class="password-eye" onclick="togglePassword('signupPassword', this)">
+                <i class="fa-regular fa-eye"></i>
+            </span>
+        </div>
+
         <label>Confirm Password</label>
         <div class="auth-password-wrap">
-    <input
-        type="password"
-        id="loginPassword"
-        name="password"
-        placeholder="Enter password"
-        required>
+            <input type="password" name="confirm_password" id="confirmPassword" placeholder="Re-enter password" required>
 
-    <span
-        class="password-eye"
-        onclick="togglePassword('loginPassword', this)">
-        👁️
-    </span>
-</div>
+            <span class="password-eye" onclick="togglePassword('confirmPassword', this)">
+                <i class="fa-regular fa-eye"></i>
+            </span>
+        </div>
 
         <button type="submit" class="auth-primary-btn">Sign Up</button>
     </form>
@@ -70,24 +60,40 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
 
     <a href="/google-login" class="auth-google-btn">
         <img
-    src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-    class="google-logo"
-    alt="Google">
+            src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+            class="google-logo"
+            alt="Google">
         Continue with Google
     </a>
 
 </div>
 
 <script>
-function togglePassword(id) {
+function togglePassword(id, element) {
     const input = document.getElementById(id);
+    const icon = element.querySelector("i");
 
     if (input.type === "password") {
         input.type = "text";
+        icon.classList.remove("fa-eye");
+        icon.classList.add("fa-eye-slash");
     } else {
         input.type = "password";
+        icon.classList.remove("fa-eye-slash");
+        icon.classList.add("fa-eye");
     }
 }
+
+const password = document.getElementById("signupPassword");
+const confirmPassword = document.getElementById("confirmPassword");
+
+confirmPassword.addEventListener("input", function () {
+    if (confirmPassword.value !== password.value) {
+        confirmPassword.style.borderColor = "#dc2626";
+    } else {
+        confirmPassword.style.borderColor = "#16a34a";
+    }
+});
 </script>
 
 </body>

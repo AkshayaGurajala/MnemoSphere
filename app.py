@@ -1,4 +1,5 @@
 from flask import Flask, render_template, request, redirect, jsonify, Response, session
+import secrets
 import sqlite3
 import requests
 from bs4 import BeautifulSoup
@@ -19,6 +20,11 @@ load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "mnemosphere_secret_key")
+app.config.update(
+    SESSION_COOKIE_SAMESITE="None",
+    SESSION_COOKIE_SECURE=True
+)
+
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 oauth = OAuth(app)
 
@@ -35,17 +41,16 @@ def init_db():
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
-    # USERS TABLE
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
             username TEXT NOT NULL,
             email TEXT UNIQUE NOT NULL,
-            password TEXT NOT NULL
+            password TEXT NOT NULL,
+            extension_token TEXT
         )
     """)
 
-    # MEMORIES TABLE
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS memories (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -62,10 +67,15 @@ def init_db():
             memory_type TEXT,
             next_topics TEXT,
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-
             FOREIGN KEY(user_id) REFERENCES users(id)
         )
     """)
+
+    cursor.execute("PRAGMA table_info(users)")
+    columns = [col[1] for col in cursor.fetchall()]
+
+    if "extension_token" not in columns:
+        cursor.execute("ALTER TABLE users ADD COLUMN extension_token TEXT")
 
     conn.commit()
     conn.close()
@@ -326,6 +336,9 @@ def home():
 
 @app.route("/add", methods=["GET", "POST"])
 def add_memory():
+    if "user_id" not in session:
+        return redirect("/login")
+
     if request.method == "POST":
         title = request.form.get("title", "")
         url = request.form.get("url", "")
@@ -336,7 +349,10 @@ def add_memory():
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM memories WHERE url = ?", (url,))
+        cursor.execute(
+            "SELECT * FROM memories WHERE url = ? AND user_id = ?",
+            (url, session["user_id"])
+        )
         existing_memory = cursor.fetchone()
 
         if existing_memory:
@@ -353,16 +369,10 @@ def add_memory():
             difficulty
         )
 
-        summary = ai_result["summary"]
-        keywords = ai_result["keywords"]
-        category = ai_result["category"]
-        knowledge_score = ai_result["knowledge_score"]
-        memory_type = ai_result["memory_type"]
-        next_topics = ai_result["next_topics"]
-
         cursor.execute("""
             INSERT INTO memories
             (
+                user_id,
                 title,
                 url,
                 topic,
@@ -375,19 +385,20 @@ def add_memory():
                 memory_type,
                 next_topics
             )
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
+            session["user_id"],
             title,
             url,
             topic,
             notes,
             difficulty,
-            summary,
-            keywords,
-            category,
-            knowledge_score,
-            memory_type,
-            next_topics
+            ai_result["summary"],
+            ai_result["keywords"],
+            ai_result["category"],
+            ai_result["knowledge_score"],
+            ai_result["memory_type"],
+            ai_result["next_topics"]
         ))
 
         conn.commit()
@@ -397,16 +408,20 @@ def add_memory():
 
     return render_template("add_memory.html")
 
+
 @app.route("/memories")
 def memories():
+    if "user_id" not in session:
+        return redirect("/login")
+
     search = request.args.get("search", "")
     difficulty_filter = request.args.get("difficulty", "")
 
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
-    query = "SELECT * FROM memories WHERE 1=1"
-    params = []
+    query = "SELECT * FROM memories WHERE user_id = ?"
+    params = [session["user_id"]]
 
     if search:
         query += """
@@ -426,16 +441,28 @@ def memories():
     cursor.execute(query, params)
     data = cursor.fetchall()
 
-    cursor.execute("SELECT COUNT(*) FROM memories")
+    cursor.execute(
+        "SELECT COUNT(*) FROM memories WHERE user_id = ?",
+        (session["user_id"],)
+    )
     total_memories = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM memories WHERE difficulty='Easy'")
+    cursor.execute(
+        "SELECT COUNT(*) FROM memories WHERE user_id = ? AND difficulty='Easy'",
+        (session["user_id"],)
+    )
     easy_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM memories WHERE difficulty='Medium'")
+    cursor.execute(
+        "SELECT COUNT(*) FROM memories WHERE user_id = ? AND difficulty='Medium'",
+        (session["user_id"],)
+    )
     medium_count = cursor.fetchone()[0]
 
-    cursor.execute("SELECT COUNT(*) FROM memories WHERE difficulty='Hard'")
+    cursor.execute(
+        "SELECT COUNT(*) FROM memories WHERE user_id = ? AND difficulty='Hard'",
+        (session["user_id"],)
+    )
     hard_count = cursor.fetchone()[0]
 
     conn.close()
@@ -460,78 +487,86 @@ def memories():
 def api_add_memory():
     data = request.get_json()
 
+    token = request.headers.get("X-Mnemo-Token")
+
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    if token:
+        cursor.execute("SELECT id FROM users WHERE extension_token = ?", (token,))
+        user = cursor.fetchone()
+    elif "user_id" in session:
+        user = (session["user_id"],)
+    else:
+        user = None
+
+    if not user:
+        conn.close()
+        return jsonify({
+            "success": False,
+            "message": "Please connect your extension token first."
+        }), 401
+
+    user_id = user[0]
+
     title = data.get("title", "")
     url = data.get("url", "")
     topic = data.get("topic", "")
     notes = data.get("notes", "")
     difficulty = data.get("difficulty", "Medium")
 
-    conn = sqlite3.connect("database.db")
-    cursor = conn.cursor()
-
-    cursor.execute("SELECT * FROM memories WHERE url = ?", (url,))
+    cursor.execute(
+        "SELECT * FROM memories WHERE url = ? AND user_id = ?",
+        (url, user_id)
+    )
     existing_memory = cursor.fetchone()
 
     if existing_memory:
         conn.close()
         return jsonify({
-            "message": "This memory already exists in MnemoSphere!"
+            "success": False,
+            "message": "This memory already exists in your MnemoSphere!"
         })
 
     page_text = extract_webpage_text(url)
 
-    ai_result = generate_ai_analysis(
-        page_text,
-        title,
-        topic,
-        notes,
-        difficulty
-    )
-
-    summary = ai_result["summary"]
-    keywords = ai_result["keywords"]
-    category = ai_result["category"]
-    knowledge_score = ai_result.get("knowledge_score", 50)
-    memory_type = ai_result.get("memory_type", "General Knowledge")
-    next_topics = ai_result.get("next_topics", "Not available")
+    ai_result = generate_ai_analysis(page_text, title, topic, notes, difficulty)
 
     cursor.execute("""
         INSERT INTO memories 
         (
-            title,
-            url,
-            topic,
-            notes,
-            difficulty,
-            summary,
-            keywords,
-            category,
-            knowledge_score,
-            memory_type,
-            next_topics
+            user_id, title, url, topic, notes, difficulty,
+            summary, keywords, category, knowledge_score,
+            memory_type, next_topics
         )
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     """, (
+        user_id,
         title,
         url,
         topic,
         notes,
         difficulty,
-        summary,
-        keywords,
-        category,
-        knowledge_score,
-        memory_type,
-        next_topics
+        ai_result.get("summary", ""),
+        ai_result.get("keywords", ""),
+        ai_result.get("category", ""),
+        ai_result.get("knowledge_score", 50),
+        ai_result.get("memory_type", "General Knowledge"),
+        ai_result.get("next_topics", "Not available")
     ))
 
     conn.commit()
     conn.close()
 
-    return jsonify({"message": "Memory saved successfully!"})
-
+    return jsonify({
+        "success": True,
+        "message": "Memory saved successfully!"
+    })
 @app.route("/ask", methods=["GET", "POST"])
 def ask():
+    if "user_id" not in session:
+        return redirect("/login")
+
     answer = ""
     question = ""
     related_memories = []
@@ -542,11 +577,15 @@ def ask():
         conn = sqlite3.connect("database.db")
         cursor = conn.cursor()
 
-        cursor.execute("SELECT * FROM memories ORDER BY created_at DESC")
+        cursor.execute(
+            "SELECT * FROM memories WHERE user_id = ? ORDER BY created_at DESC",
+            (session["user_id"],)
+        )
         all_memories = cursor.fetchall()
 
         conn.close()
-        related_memories = semantic_memory_search(question,all_memories)
+
+        related_memories = semantic_memory_search(question, all_memories)
         answer = answer_from_memories(question, related_memories)
 
     return render_template(
@@ -556,8 +595,12 @@ def ask():
         related_memories=related_memories
     )
 
+
 @app.route("/edit/<int:memory_id>", methods=["GET", "POST"])
 def edit_memory(memory_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
@@ -575,10 +618,11 @@ def edit_memory(memory_id):
             UPDATE memories
             SET title = ?, url = ?, topic = ?, notes = ?, difficulty = ?,
                 summary = ?, keywords = ?, category = ?
-            WHERE id = ?
+            WHERE id = ? AND user_id = ?
         """, (
             title, url, topic, notes, difficulty,
-            summary, keywords, category, memory_id
+            summary, keywords, category,
+            memory_id, session["user_id"]
         ))
 
         conn.commit()
@@ -586,40 +630,62 @@ def edit_memory(memory_id):
 
         return redirect("/memories")
 
-    cursor.execute("SELECT * FROM memories WHERE id = ?", (memory_id,))
+    cursor.execute(
+        "SELECT * FROM memories WHERE id = ? AND user_id = ?",
+        (memory_id, session["user_id"])
+    )
     memory = cursor.fetchone()
 
     conn.close()
 
+    if not memory:
+        return redirect("/memories")
+
     return render_template("edit_memory.html", memory=memory)
+
+
 @app.route("/delete/<int:memory_id>")
 def delete_memory(memory_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
-    cursor.execute("DELETE FROM memories WHERE id = ?", (memory_id,))
+    cursor.execute(
+        "DELETE FROM memories WHERE id = ? AND user_id = ?",
+        (memory_id, session["user_id"])
+    )
 
     conn.commit()
     conn.close()
 
     return redirect("/memories")
+
+
 @app.route("/regenerate/<int:memory_id>")
 def regenerate_memory(memory_id):
+    if "user_id" not in session:
+        return redirect("/login")
+
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM memories WHERE id = ?", (memory_id,))
+    cursor.execute(
+        "SELECT * FROM memories WHERE id = ? AND user_id = ?",
+        (memory_id, session["user_id"])
+    )
     memory = cursor.fetchone()
 
     if not memory:
         conn.close()
         return redirect("/memories")
 
-    title = memory[1]
-    url = memory[2]
-    topic = memory[3]
-    notes = memory[4]
-    difficulty = memory[5]
+    title = memory[2]
+    url = memory[3]
+    topic = memory[4]
+    notes = memory[5]
+    difficulty = memory[6]
 
     page_text = extract_webpage_text(url)
 
@@ -631,15 +697,21 @@ def regenerate_memory(memory_id):
         difficulty
     )
 
-    summary = ai_result["summary"]
-    keywords = ai_result["keywords"]
-    category = ai_result["category"]
-
     cursor.execute("""
         UPDATE memories
-        SET summary = ?, keywords = ?, category = ?
-        WHERE id = ?
-    """, (summary, keywords, category, memory_id))
+        SET summary = ?, keywords = ?, category = ?,
+            knowledge_score = ?, memory_type = ?, next_topics = ?
+        WHERE id = ? AND user_id = ?
+    """, (
+        ai_result["summary"],
+        ai_result["keywords"],
+        ai_result["category"],
+        ai_result["knowledge_score"],
+        ai_result["memory_type"],
+        ai_result["next_topics"],
+        memory_id,
+        session["user_id"]
+    ))
 
     conn.commit()
     conn.close()
@@ -752,18 +824,26 @@ def export_pdf():
     )
 @app.route("/memory/<int:memory_id>")
 def memory_detail(memory_id):
+    if "user_id" not in session:
+        return redirect("/login")
 
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
-    cursor.execute("SELECT * FROM memories WHERE id = ?", (memory_id,))
+    cursor.execute(
+        "SELECT * FROM memories WHERE id = ? AND user_id = ?",
+        (memory_id, session["user_id"])
+    )
     memory = cursor.fetchone()
 
     if not memory:
         conn.close()
         return redirect("/memories")
 
-    cursor.execute("SELECT * FROM memories")
+    cursor.execute(
+        "SELECT * FROM memories WHERE user_id = ?",
+        (session["user_id"],)
+    )
     all_memories = cursor.fetchall()
 
     conn.close()
@@ -778,6 +858,7 @@ def memory_detail(memory_id):
         memory=memory,
         related_memories=related_memories
     )
+
 @app.route("/tag/<tag_name>")
 def filter_by_tag(tag_name):
 
@@ -814,19 +895,24 @@ def signup():
 
     if request.method == "POST":
 
-        username = request.form.get("username")
-        email = request.form.get("email")
-        password = request.form.get("password")
-        confirm_password = request.form.get("confirm_password")
+        username = request.form.get("username", "").strip()
+        email = request.form.get("email", "").strip().lower()
+        password = request.form.get("password", "").strip()
+        confirm_password = request.form.get("confirm_password", "").strip()
 
-        if len(password) < 8:
+        print("PASSWORD:", repr(password))
+        print("CONFIRM:", repr(confirm_password))
+
+        if not username or not email or not password or not confirm_password:
+            error = "All fields are required."
+
+        elif len(password) < 8:
             error = "Password must be at least 8 characters."
 
         elif password != confirm_password:
             error = "Passwords do not match."
 
         else:
-
             conn = sqlite3.connect("database.db")
             cursor = conn.cursor()
 
@@ -839,9 +925,7 @@ def signup():
 
             if existing_user:
                 error = "Email already registered."
-
             else:
-
                 hashed_password = generate_password_hash(password)
 
                 cursor.execute("""
@@ -938,6 +1022,34 @@ def google_callback():
     session["username"] = user[1]
 
     return redirect("/")
+@app.route("/extension-token")
+def extension_token():
+    if "user_id" not in session:
+        return redirect("/login")
+
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT extension_token FROM users WHERE id = ?", (session["user_id"],))
+    token = cursor.fetchone()[0]
+
+    if not token:
+        token = secrets.token_hex(32)
+        cursor.execute(
+            "UPDATE users SET extension_token = ? WHERE id = ?",
+            (token, session["user_id"])
+        )
+        conn.commit()
+
+    conn.close()
+
+    return f"""
+    <h2>MnemoSphere Extension Token</h2>
+    <p>Copy this token and paste it in your Chrome extension:</p>
+    <textarea style='width:600px;height:100px'>{token}</textarea>
+    <br><br>
+    <a href='/'>Back Home</a>
+    """
 @app.route("/logout")
 def logout():
 
@@ -946,78 +1058,95 @@ def logout():
     return redirect("/login")
 @app.route("/dashboard")
 def dashboard():
+    if "user_id" not in session:
+        return redirect("/login")
+
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
-    cursor.execute("SELECT COUNT(*) FROM memories")
+    cursor.execute(
+        "SELECT COUNT(*) FROM memories WHERE user_id = ?",
+        (session["user_id"],)
+    )
     total_memories = cursor.fetchone()[0]
 
-    cursor.execute("SELECT AVG(knowledge_score) FROM memories")
+    cursor.execute(
+        "SELECT AVG(knowledge_score) FROM memories WHERE user_id = ?",
+        (session["user_id"],)
+    )
     avg_score = cursor.fetchone()[0]
     avg_score = round(avg_score, 2) if avg_score else 0
 
     cursor.execute("""
-        SELECT category, COUNT(*) 
-        FROM memories 
-        GROUP BY category 
+        SELECT category, COUNT(*)
+        FROM memories
+        WHERE user_id = ?
+        GROUP BY category
         ORDER BY COUNT(*) DESC
-    """)
+    """, (session["user_id"],))
     categories = cursor.fetchall()
 
     cursor.execute("""
-        SELECT memory_type, COUNT(*) 
-        FROM memories 
-        GROUP BY memory_type 
+        SELECT memory_type, COUNT(*)
+        FROM memories
+        WHERE user_id = ?
+        GROUP BY memory_type
         ORDER BY COUNT(*) DESC
-    """)
+    """, (session["user_id"],))
     memory_types = cursor.fetchall()
 
     cursor.execute("""
-        SELECT topic, COUNT(*) 
-        FROM memories 
-        GROUP BY topic 
+        SELECT topic, COUNT(*)
+        FROM memories
+        WHERE user_id = ?
+        GROUP BY topic
         ORDER BY COUNT(*) DESC
         LIMIT 1
-    """)
+    """, (session["user_id"],))
     top_topic_result = cursor.fetchone()
     top_topic = top_topic_result[0] if top_topic_result else "No topic yet"
 
     cursor.execute("""
         SELECT title, knowledge_score, memory_type
         FROM memories
+        WHERE user_id = ?
         ORDER BY knowledge_score DESC
         LIMIT 5
-    """)
+    """, (session["user_id"],))
     top_memories = cursor.fetchall()
 
     cursor.execute("""
         SELECT COUNT(*)
         FROM memories
-        WHERE date(created_at) >= date('now', '-7 days')
-    """)
+        WHERE user_id = ?
+        AND date(created_at) >= date('now', '-7 days')
+    """, (session["user_id"],))
     memories_this_week = cursor.fetchone()[0]
 
     cursor.execute("""
         SELECT AVG(knowledge_score)
         FROM memories
-        WHERE date(created_at) >= date('now', '-7 days')
-    """)
+        WHERE user_id = ?
+        AND date(created_at) >= date('now', '-7 days')
+    """, (session["user_id"],))
     weekly_avg_score = cursor.fetchone()[0]
     weekly_avg_score = round(weekly_avg_score, 2) if weekly_avg_score else 0
 
     cursor.execute("""
         SELECT COUNT(*)
         FROM memories
-        WHERE knowledge_score >= 80
-    """)
+        WHERE user_id = ?
+        AND knowledge_score >= 80
+    """, (session["user_id"],))
     high_value_count = cursor.fetchone()[0]
 
     cursor.execute("""
         SELECT date(created_at)
         FROM memories
+        WHERE user_id = ?
         GROUP BY date(created_at)
         ORDER BY date(created_at) DESC
-    """)
+    """, (session["user_id"],))
     learning_days = [row[0] for row in cursor.fetchall()]
 
     conn.close()
@@ -1102,15 +1231,19 @@ def regenerate_missing():
     return redirect("/dashboard")
 @app.route("/knowledge-graph")
 def knowledge_graph():
+    if "user_id" not in session:
+        return redirect("/login")
+
     conn = sqlite3.connect("database.db")
     cursor = conn.cursor()
 
     cursor.execute("""
         SELECT title, topic, category, keywords
         FROM memories
+        WHERE user_id = ?
         ORDER BY created_at DESC
         LIMIT 30
-    """)
+    """, (session["user_id"],))
 
     memories = cursor.fetchall()
     conn.close()
@@ -1142,28 +1275,16 @@ def knowledge_graph():
         add_node(topic_id, topic, "topic")
         add_node(category_id, category, "category")
 
-        edges.append({
-            "from": memory_id,
-            "to": topic_id
-        })
-
-        edges.append({
-            "from": topic_id,
-            "to": category_id
-        })
+        edges.append({"from": memory_id, "to": topic_id})
+        edges.append({"from": topic_id, "to": category_id})
 
         for keyword in keywords.split(",")[:5]:
             keyword = keyword.strip().replace("#", "")
 
             if keyword:
                 keyword_id = "keyword_" + keyword
-
                 add_node(keyword_id, keyword, "keyword")
-
-                edges.append({
-                    "from": memory_id,
-                    "to": keyword_id
-                })
+                edges.append({"from": memory_id, "to": keyword_id})
 
     return render_template(
         "knowledge_graph.html",

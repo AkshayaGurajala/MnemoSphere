@@ -76,21 +76,28 @@ chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
 
         fetch("https://mnemosphere.onrender.com/api/add-memory", {
             method: "POST",
+            credentials: "include",
             headers: {
                 "Content-Type": "application/json"
             },
             body: JSON.stringify(memoryData)
         })
-        .then(response => response.json())
-        .then(data => {
-            savedUrls.push(tab.url);
+        .then(async response => {
+    const data = await response.json();
 
-            chrome.storage.local.set({
-                autoSavedUrls: savedUrls
-            });
+    if (!response.ok || data.success === false) {
+        console.error("MnemoSphere Auto Save Failed:", data.message);
+        return;
+    }
 
-            console.log("MnemoSphere Auto Save:", data.message);
-        })
+    savedUrls.push(tab.url);
+
+    chrome.storage.local.set({
+        autoSavedUrls: savedUrls
+    });
+
+    console.log("MnemoSphere Auto Save:", data.message);
+})
         .catch(error => {
             console.error("MnemoSphere Auto Save Error:", error);
         });

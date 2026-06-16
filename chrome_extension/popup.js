@@ -92,30 +92,31 @@ function saveMemory() {
     };
 
     fetch("https://mnemosphere.onrender.com/api/add-memory", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
-        body: JSON.stringify(memoryData)
-    })
-    .then(async response => {
-        const text = await response.text();
+    method: "POST",
+    credentials: "include",
+    headers: {
+    "Content-Type": "application/json",
+    "X-Mnemo-Token": localStorage.getItem("mnemo_token") || ""
+},
+    body: JSON.stringify(memoryData)
+})
+.then(async response => {
+    const data = await response.json();
 
-        try {
-            return JSON.parse(text);
-        } catch {
-            throw new Error(text);
-        }
-    })
-    .then(data => {
-        status.innerText = data.message;
-        status.style.color = "green";
-    })
-    .catch(error => {
-        status.innerText = "Error saving memory. Check Flask terminal.";
+    if (!response.ok || data.success === false) {
+        status.innerText = data.message || "Memory was not saved.";
         status.style.color = "red";
-        console.error("Actual error:", error);
-    });
+        return;
+    }
+
+    status.innerText = data.message;
+    status.style.color = "green";
+})
+.catch(error => {
+    status.innerText = "Error saving memory. Please login to MnemoSphere website first.";
+    status.style.color = "red";
+    console.error(error);
+});
 }
 
 chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {

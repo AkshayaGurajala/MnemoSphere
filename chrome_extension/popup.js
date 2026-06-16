@@ -15,18 +15,22 @@ document.addEventListener("DOMContentLoaded", function () {
     const saveTokenBtn = document.getElementById("saveTokenBtn");
     const tokenStatus = document.getElementById("tokenStatus");
     const googleLoginBtn = document.getElementById("googleLoginBtn");
+    const logoutBtn = document.getElementById("logoutBtn");
     const saveBtn = document.getElementById("saveBtn");
 
-    if (!tokenInput || !saveTokenBtn || !tokenStatus || !googleLoginBtn || !saveBtn) {
+    if (!tokenInput || !saveTokenBtn || !tokenStatus || !googleLoginBtn || !logoutBtn || !saveBtn) {
         console.error("Required popup elements missing in popup.html");
         return;
     }
 
     const savedToken = localStorage.getItem("mnemo_token");
+    const savedEmail = localStorage.getItem("mnemo_email");
 
     if (savedToken) {
         tokenInput.value = savedToken;
-        tokenStatus.innerText = "Account connected.";
+        tokenStatus.innerText = savedEmail
+            ? "Connected as " + savedEmail
+            : "Account connected.";
         tokenStatus.style.color = "green";
     }
 
@@ -40,51 +44,70 @@ document.addEventListener("DOMContentLoaded", function () {
         }
 
         localStorage.setItem("mnemo_token", manualToken);
+        localStorage.removeItem("mnemo_email");
+
         tokenStatus.innerText = "Token saved. Account connected.";
         tokenStatus.style.color = "green";
+    });
+
+    logoutBtn.addEventListener("click", function () {
+        localStorage.removeItem("mnemo_token");
+        localStorage.removeItem("mnemo_email");
+
+        tokenInput.value = "";
+        tokenStatus.innerText = "Account disconnected.";
+        tokenStatus.style.color = "red";
+
+        chrome.identity.clearAllCachedAuthTokens(function () {
+            console.log("Chrome OAuth cache cleared.");
+        });
     });
 
     googleLoginBtn.addEventListener("click", function () {
         tokenStatus.innerText = "Connecting with Google...";
         tokenStatus.style.color = "#2563eb";
 
-        chrome.identity.getAuthToken({ interactive: true }, function (googleToken) {
-            if (chrome.runtime.lastError || !googleToken) {
-                tokenStatus.innerText = chrome.runtime.lastError
-                    ? chrome.runtime.lastError.message
-                    : "Google login failed.";
-                tokenStatus.style.color = "red";
-                console.error("Chrome identity error:", chrome.runtime.lastError);
-                return;
-            }
-
-            fetch("https://mnemosphere.onrender.com/api/extension-google-login", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    access_token: googleToken
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (!data.success) {
-                    tokenStatus.innerText = data.message || "Connection failed.";
+        chrome.identity.clearAllCachedAuthTokens(function () {
+            chrome.identity.getAuthToken({ interactive: true }, function (googleToken) {
+                if (chrome.runtime.lastError || !googleToken) {
+                    tokenStatus.innerText = chrome.runtime.lastError
+                        ? chrome.runtime.lastError.message
+                        : "Google login failed.";
                     tokenStatus.style.color = "red";
+                    console.error("Chrome identity error:", chrome.runtime.lastError);
                     return;
                 }
 
-                localStorage.setItem("mnemo_token", data.token);
-                tokenInput.value = data.token;
+                fetch("https://mnemosphere.onrender.com/api/extension-google-login", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify({
+                        access_token: googleToken
+                    })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (!data.success) {
+                        tokenStatus.innerText = data.message || "Connection failed.";
+                        tokenStatus.style.color = "red";
+                        return;
+                    }
 
-                tokenStatus.innerText = "Connected as " + data.email;
-                tokenStatus.style.color = "green";
-            })
-            .catch(error => {
-                tokenStatus.innerText = "Connection error.";
-                tokenStatus.style.color = "red";
-                console.error("Backend connection error:", error);
+                    localStorage.setItem("mnemo_token", data.token);
+                    localStorage.setItem("mnemo_email", data.email);
+
+                    tokenInput.value = data.token;
+
+                    tokenStatus.innerText = "Connected as " + data.email;
+                    tokenStatus.style.color = "green";
+                })
+                .catch(error => {
+                    tokenStatus.innerText = "Connection error.";
+                    tokenStatus.style.color = "red";
+                    console.error("Backend connection error:", error);
+                });
             });
         });
     });

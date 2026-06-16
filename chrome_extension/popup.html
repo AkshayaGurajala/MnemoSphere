@@ -4,12 +4,31 @@
     <title>MnemoSphere</title>
     <link rel="stylesheet" href="popup.css">
 </head>
+
 <body>
 
 <div class="popup-card">
 
     <h2>MnemoSphere</h2>
     <p class="subtitle">AI Browser Memory Assistant</p>
+
+    <div class="token-box">
+        <label>Connect MnemoSphere Account</label>
+        <button id="googleLoginBtn">Connect with Google</button>
+        <input
+            type="password"
+            id="tokenInput"
+            placeholder="Paste your extension token">
+
+        <button id="saveTokenBtn">Save Token</button>
+
+        <p id="tokenStatus"></p>
+
+        <a href="https://mnemosphere.onrender.com/extension-token"
+           target="_blank">
+           Get my token
+        </a>
+    </div>
 
     <label class="field-label">Memory Mode</label>
     <select id="memoryMode">

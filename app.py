@@ -1050,6 +1050,76 @@ def extension_token():
     <br><br>
     <a href='/'>Back Home</a>
     """
+@app.route("/api/extension-google-login", methods=["POST"])
+def extension_google_login():
+    data = request.get_json()
+    access_token = data.get("access_token")
+
+    if not access_token:
+        return jsonify({
+            "success": False,
+            "message": "Access token missing."
+        }), 400
+
+    userinfo_response = requests.get(
+        "https://www.googleapis.com/oauth2/v3/userinfo",
+        headers={"Authorization": f"Bearer {access_token}"}
+    )
+
+    if userinfo_response.status_code != 200:
+        return jsonify({
+            "success": False,
+            "message": "Google login failed."
+        }), 401
+
+    userinfo = userinfo_response.json()
+
+    email = userinfo.get("email")
+    username = userinfo.get("name", email.split("@")[0])
+
+    conn = sqlite3.connect("database.db")
+    cursor = conn.cursor()
+
+    cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+    user = cursor.fetchone()
+
+    if not user:
+        extension_token = secrets.token_hex(32)
+
+        cursor.execute("""
+            INSERT INTO users (username, email, password, extension_token)
+            VALUES (?, ?, ?, ?)
+        """, (
+            username,
+            email,
+            "GOOGLE_EXTENSION_LOGIN",
+            extension_token
+        ))
+
+        conn.commit()
+
+        cursor.execute("SELECT * FROM users WHERE email = ?", (email,))
+        user = cursor.fetchone()
+    else:
+        extension_token = user[4]
+
+        if not extension_token:
+            extension_token = secrets.token_hex(32)
+            cursor.execute(
+                "UPDATE users SET extension_token = ? WHERE id = ?",
+                (extension_token, user[0])
+            )
+            conn.commit()
+
+    conn.close()
+
+    return jsonify({
+        "success": True,
+        "message": "Extension connected successfully.",
+        "token": extension_token,
+        "email": email
+    })
+
 @app.route("/logout")
 def logout():
 

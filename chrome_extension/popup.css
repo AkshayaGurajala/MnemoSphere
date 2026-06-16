@@ -97,3 +97,44 @@ button:hover {
     font-weight: bold;
     margin-bottom: 0;
 }
+.token-box {
+    background: #f8fafc;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 14px;
+    border: 1px solid #e2e8f0;
+}
+
+.token-box label {
+    font-weight: 700;
+    font-size: 13px;
+    color: #1e293b;
+}
+
+.token-box input {
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    box-sizing: border-box;
+}
+
+.token-box button {
+    width: 100%;
+    margin-top: 8px;
+    padding: 9px;
+    background: #2563eb;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-weight: 700;
+}
+
+.token-box a {
+    display: block;
+    margin-top: 8px;
+    font-size: 12px;
+    color: #2563eb;
+    text-align: center;
+}

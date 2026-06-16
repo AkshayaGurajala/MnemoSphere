@@ -3,8 +3,12 @@
   "name": "MnemoSphere",
   "version": "1.0",
   "description": "Save useful webpages into your AI digital memory.",
-  "permissions": ["tabs", "activeTab", "storage"],
+  "permissions": ["tabs", "activeTab", "storage", "identity"],
   "host_permissions": ["https://mnemosphere.onrender.com/*", "<all_urls>"],
+  "oauth2": {
+    "client_id": "801442630595-71orubgj5qmvbkp76t58cut92op7r18s.apps.googleusercontent.com",
+    "scopes": ["openid", "email", "profile"]
+  },
   "background": {
     "service_worker": "background.js"
   },
